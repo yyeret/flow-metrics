@@ -41,7 +41,7 @@ def main():
     for name, expected in files.items():
         path = checkout / name
         if args.check:
-            if not path.is_file() or path.read_bytes() != expected:
+            if not path.is_file() or path.read_bytes().replace(b'\r\n', b'\n') != expected:
                 raise SystemExit(f"{path} differs from {revision}")
         else:
             path.parent.mkdir(parents=True, exist_ok=True)

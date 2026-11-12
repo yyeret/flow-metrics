@@ -65,4 +65,4 @@ python3 scripts/vendor.py jira-flow-coaching /path/to/jira-flow-coaching --revis
 python3 scripts/vendor.py github-analytics /path/to/github-analytics --revision COMMIT
 ```
 
-Add `--check` to verify the copies byte for byte.
+Add `--check` to verify the copies against the pinned source, allowing Windows checkout line endings.
