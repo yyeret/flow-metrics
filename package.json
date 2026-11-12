@@ -1,0 +1,32 @@
+{
+  "name": "@yyeret/flow-metrics",
+  "version": "0.1.0",
+  "description": "Measure work in progress, work item age, cycle time, throughput, and cumulative flow from workflow events.",
+  "author": "Yuval Yeret (https://yuvalyeret.com/)",
+  "license": "MIT",
+  "type": "commonjs",
+  "engines": {
+    "node": ">=22"
+  },
+  "exports": {
+    ".": {
+      "import": "./index.mjs",
+      "require": "./flow-metrics.js"
+    },
+    "./classic": "./flow-metrics.js"
+  },
+  "files": ["flow-metrics.js", "index.mjs", "docs/flow-metrics-guide.md"],
+  "scripts": {
+    "test": "node --test",
+    "check": "node --check flow-metrics.js && node --check index.mjs"
+  },
+  "keywords": ["flow-metrics", "kanban", "cycle-time", "throughput", "cumulative-flow"],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/yyeret/flow-metrics.git"
+  },
+  "homepage": "https://github.com/yyeret/flow-metrics#readme",
+  "bugs": {
+    "url": "https://github.com/yyeret/flow-metrics/issues"
+  }
+}
