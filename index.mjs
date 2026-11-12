@@ -1,3 +1,5 @@
 import FlowMetrics from './flow-metrics.js';
 
-export const { createFlow, histogram, individualsMovingRange, percentile } = FlowMetrics;
+export const {
+  countEventsInWindows, countIntervals, createFlow, elapsed, histogram, individualsMovingRange, percentile,
+} = FlowMetrics;

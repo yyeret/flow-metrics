@@ -40,9 +40,9 @@ const FlowMetrics = (() => {
     const open = finishedAt === null;
     return {
       id, stage, startedAt, stageEnteredAt, finishedAt,
-      workItemAge: open ? asOf - startedAt : null,
-      stageAge: open ? asOf - stageEnteredAt : null,
-      cycleTime: open ? null : finishedAt - startedAt,
+      workItemAge: open ? elapsed(startedAt, asOf) : null,
+      stageAge: open ? elapsed(stageEnteredAt, asOf) : null,
+      cycleTime: open ? null : elapsed(startedAt, finishedAt),
     };
   }
 
@@ -111,7 +111,7 @@ const FlowMetrics = (() => {
         const startedAt = history[0].at;
         for (const { at, stage } of history) {
           if (at > asOf) break;
-          if (selected.has(stage)) samples.push({ id, at, stage, duration: at - startedAt });
+          if (selected.has(stage)) samples.push({ id, at, stage, duration: elapsed(startedAt, at) });
         }
       }
       return samples.sort((a, b) => {
@@ -132,14 +132,74 @@ const FlowMetrics = (() => {
     return true;
   }
 
-  function percentile(values, probability) {
+  function elapsed(start, end, units = 1) {
+    return (end - start) / units;
+  }
+
+  function checkOrder(times) {
+    if (!finiteValues(times) || times.some((time, index) => index > 0 && time < times[index - 1])) {
+      throw new RangeError('sample times must be finite and chronological');
+    }
+  }
+
+  function insertionIndex(times, target, afterEqual = false) {
+    let low = 0;
+    let high = times.length;
+    while (low < high) {
+      const middle = Math.floor((low + high) / 2);
+      const time = times[middle];
+      if (time < target || (afterEqual && time === target)) low = middle + 1;
+      else high = middle;
+    }
+    return low;
+  }
+
+  function countIntervals(intervals, samples) {
+    checkOrder(samples);
+    const changes = new Array(samples.length + 1).fill(0);
+    for (const [start, end] of intervals) {
+      checkTime(start, 'interval start');
+      if (end !== null) checkTime(end, 'interval end');
+      if (end !== null && end <= start) continue;
+      changes[insertionIndex(samples, start)]++;
+      changes[end === null ? samples.length : insertionIndex(samples, end)]--;
+    }
+    let count = 0;
+    return samples.map((_, index) => {
+      count += changes[index];
+      return count;
+    });
+  }
+
+  function countEventsInWindows(events, boundaries) {
+    checkOrder(boundaries);
+    if (!finiteValues(events)) throw new TypeError('event times must be finite');
+    if (boundaries.length < 2) return [];
+    const ordered = [...events].sort((a, b) => a - b);
+    let previous = insertionIndex(ordered, boundaries[0], true);
+    return boundaries.slice(1).map(end => {
+      const current = insertionIndex(ordered, end, true);
+      const count = current - previous;
+      previous = current;
+      return count;
+    });
+  }
+
+  function percentile(values, probability, { method = 'nearest-rank' } = {}) {
     if (!Number.isFinite(probability) || probability <= 0 || probability > 1) {
       throw new RangeError('probability must be in (0, 1]');
     }
     if (!finiteValues(values)) throw new TypeError('values must contain finite numbers');
+    if (method !== 'nearest-rank' && method !== 'upper-index') {
+      throw new RangeError('unknown percentile method');
+    }
     if (values.length === 0) return null;
     const sorted = [...values].sort((a, b) => a - b);
-    return sorted[Math.ceil(sorted.length * probability) - 1];
+    const position = sorted.length * probability;
+    const index = method === 'upper-index'
+      ? Math.min(Math.floor(position), sorted.length - 1)
+      : Math.ceil(position) - 1;
+    return sorted[index];
   }
 
   function histogram(values, count = 6) {
@@ -205,7 +265,7 @@ const FlowMetrics = (() => {
     return { available: true, values, baseline, center, upper, lower, mr, mrMean, mrUpper, signals };
   }
 
-  return Object.freeze({ createFlow, histogram, individualsMovingRange, percentile });
+  return Object.freeze({ countEventsInWindows, countIntervals, createFlow, elapsed, histogram, individualsMovingRange, percentile });
 })();
 
 if (typeof module === 'object' && module?.exports) module.exports = FlowMetrics;
