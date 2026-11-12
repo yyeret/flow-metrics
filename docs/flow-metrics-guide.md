@@ -43,3 +43,26 @@ Read flow metrics alongside the outcome the workflow serves. If more work finish
 - **Agentic development.** Follow work through review and customer feedback when coding accelerates. [How to Leverage Flow Metrics To Accelerate Your Agentic Development Lifecycle](https://yuvalyeret.com/blog/flow-metrics-still-matter-agentic-ai-development/)
 - **Workflow policy and the four measures.** Define where work starts and finishes, then use the four measures to manage flow. [Scrum.org’s Kanban Guide for Scrum Teams](https://www.scrum.org/resources/kanban-guide-scrum-teams), [ProKanban’s Basic Metrics of Flow](https://prokanban.org/blog/the-kanban-pocket-guide-chapter-6-the-basic-metrics-of-flow)
 - **The origins of work item age.** Yuval traces the metric to the need to spot problems while there is still time to act on an open item. [Detecting Flow Issues Using Predictive Cycle Time Charts](https://www.scrum.org/resources/blog/detecting-flow-issues-using-predictive-cycle-time-charts-origin-kanbanflow-work-item-aging-metric)
+
+## Share the calculations across runtimes
+
+The browser and Python consumers share these calculation contracts. Keep stage mappings, date bucketing, cohorts, display units, and domain-specific estimates at the application boundary.
+
+| JavaScript / Python | Contract |
+| --- | --- |
+| `elapsed` | Signed end minus start in the requested unit. Python datetime differences use seconds before scaling. |
+| `countIntervals` / `count_intervals` | Count each `[start, end)` interval at chronological sample times. An open end is `null` in JavaScript and `None` in Python. Empty or reversed intervals contribute zero. |
+| `createBucketCounter` (JavaScript) | Stream intervals with integer bucket indices into a fixed length series. `add(start, end)` clips each half-open interval to the series. `counts()` returns occupancy per bucket. |
+| `countEventsInWindows` / `count_events_in_windows` | Count each event in successive `(start, end]` windows, including multiple events at the same time. |
+| `percentile` / `percentiles` | Read one or several quantiles from a single sorted sample. Nearest rank by default. Select `upper-index` to preserve an existing policy that takes the element at `floor(n * p)`, capped at the last element. Both return an empty result for an empty sample. |
+
+The shared [conformance cases](../test/flow-calculation-cases.json) exercise both implementations. The Python module uses the standard library. The browser build imports a local ES module generated from the same JavaScript source as the package. Consumer checkouts carry a pinned snapshot and its license, so their runtime and deployment builds need neither a network fetch nor another language runtime.
+
+Refresh from a committed revision of this repository. Run one of these commands from this checkout and use the same revision for both consumers.
+
+```sh
+python3 scripts/vendor.py jira-flow-coaching /path/to/jira-flow-coaching --revision COMMIT
+python3 scripts/vendor.py github-analytics /path/to/github-analytics --revision COMMIT
+```
+
+Add `--check` to verify the copies against the pinned source, allowing Windows checkout line endings.
