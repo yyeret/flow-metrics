@@ -185,21 +185,27 @@ const FlowMetrics = (() => {
     });
   }
 
-  function percentile(values, probability, { method = 'nearest-rank' } = {}) {
-    if (!Number.isFinite(probability) || probability <= 0 || probability > 1) {
+  function percentile(values, probability, options) {
+    return percentiles(values, [probability], options)[0];
+  }
+
+  function percentiles(values, probabilities, { method = 'nearest-rank' } = {}) {
+    if (!finiteValues(probabilities) || probabilities.some(p => p <= 0 || p > 1)) {
       throw new RangeError('probability must be in (0, 1]');
     }
     if (!finiteValues(values)) throw new TypeError('values must contain finite numbers');
     if (method !== 'nearest-rank' && method !== 'upper-index') {
       throw new RangeError('unknown percentile method');
     }
-    if (values.length === 0) return null;
+    if (values.length === 0) return probabilities.map(() => null);
     const sorted = [...values].sort((a, b) => a - b);
-    const position = sorted.length * probability;
-    const index = method === 'upper-index'
-      ? Math.min(Math.floor(position), sorted.length - 1)
-      : Math.ceil(position) - 1;
-    return sorted[index];
+    return probabilities.map(probability => {
+      const position = sorted.length * probability;
+      const index = method === 'upper-index'
+        ? Math.min(Math.floor(position), sorted.length - 1)
+        : Math.ceil(position) - 1;
+      return sorted[index];
+    });
   }
 
   function histogram(values, count = 6) {
@@ -265,7 +271,7 @@ const FlowMetrics = (() => {
     return { available: true, values, baseline, center, upper, lower, mr, mrMean, mrUpper, signals };
   }
 
-  return Object.freeze({ countEventsInWindows, countIntervals, createFlow, elapsed, histogram, individualsMovingRange, percentile });
+  return Object.freeze({ countEventsInWindows, countIntervals, createFlow, elapsed, histogram, individualsMovingRange, percentile, percentiles });
 })();
 
 if (typeof module === 'object' && module?.exports) module.exports = FlowMetrics;

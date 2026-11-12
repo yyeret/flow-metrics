@@ -47,16 +47,21 @@ def count_events_in_windows(events, boundaries):
 
 def percentile(values, probability, *, method="nearest-rank"):
     """Read an empirical quantile with an explicit sample indexing rule."""
-    if not 0 < probability <= 1:
-        raise ValueError("probability must be in (0, 1]")
+    return percentiles(values, [probability], method=method)[0]
+
+
+def percentiles(values, probabilities, *, method="nearest-rank"):
+    """Read several empirical quantiles from the same sorted sample."""
+    probabilities = list(probabilities)
+    if any(not 0 < probability <= 1 for probability in probabilities):
+        raise ValueError("probabilities must be in (0, 1]")
     if method not in ("nearest-rank", "upper-index"):
         raise ValueError("unknown percentile method")
     ordered = sorted(values)
     if any(not isfinite(value) for value in ordered):
         raise ValueError("values must contain finite numbers")
     if not ordered:
-        return None
-    position = len(ordered) * probability
+        return [None] * len(probabilities)
     if method == "upper-index":
-        return ordered[min(floor(position), len(ordered) - 1)]
-    return ordered[ceil(position) - 1]
+        return [ordered[min(floor(len(ordered) * p), len(ordered) - 1)] for p in probabilities]
+    return [ordered[ceil(len(ordered) * p) - 1] for p in probabilities]

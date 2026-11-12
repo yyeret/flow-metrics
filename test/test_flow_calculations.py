@@ -3,7 +3,7 @@ import unittest
 from datetime import datetime, timedelta
 from pathlib import Path
 
-from flow_metrics_core import count_events_in_windows, count_intervals, elapsed, percentile
+from flow_metrics_core import count_events_in_windows, count_intervals, elapsed, percentile, percentiles
 
 
 CASES = json.loads(Path(__file__).with_name("flow-calculation-cases.json").read_text(encoding="utf-8"))
@@ -28,3 +28,9 @@ class FlowCalculationTests(unittest.TestCase):
         for case in CASES["percentiles"]:
             self.assertEqual(percentile(case["values"], case["probability"]), case["nearest"])
             self.assertEqual(percentile(case["values"], case["probability"], method="upper-index"), case["upper"])
+
+    def test_batch_percentiles(self):
+        case = CASES["batch"]
+        self.assertEqual(percentiles(case["values"], case["probabilities"]), case["nearest"])
+        self.assertEqual(percentiles(case["values"], case["probabilities"], method="upper-index"), case["upper"])
+        self.assertEqual(percentiles([], case["probabilities"]), [None, None, None])

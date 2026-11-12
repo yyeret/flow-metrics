@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { test } from 'node:test';
-import { countEventsInWindows, countIntervals, elapsed, percentile } from '@yyeret/flow-metrics';
+import { countEventsInWindows, countIntervals, elapsed, percentile, percentiles } from '@yyeret/flow-metrics';
 
 const cases = JSON.parse(readFileSync(new URL('./flow-calculation-cases.json', import.meta.url)));
 
@@ -25,4 +25,11 @@ test('upper-index percentiles are opt-in and share conformance fixtures with Pyt
     assert.equal(percentile(values, probability), nearest);
     assert.equal(percentile(values, probability, { method: 'upper-index' }), upper);
   }
+});
+
+test('batch percentiles preserve requested order and handle empty samples', () => {
+  const { values, probabilities, nearest, upper } = cases.batch;
+  assert.deepEqual(percentiles(values, probabilities), nearest);
+  assert.deepEqual(percentiles(values, probabilities, { method: 'upper-index' }), upper);
+  assert.deepEqual(percentiles([], probabilities), [null, null, null]);
 });

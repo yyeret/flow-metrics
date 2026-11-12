@@ -53,7 +53,7 @@ The browser and Python consumers share these calculation contracts. Keep stage m
 | `elapsed` | Signed end minus start in the requested unit. Python datetime differences use seconds before scaling. |
 | `countIntervals` / `count_intervals` | Count each `[start, end)` interval at chronological sample times. An open end is `null` in JavaScript and `None` in Python. Empty or reversed intervals contribute zero. |
 | `countEventsInWindows` / `count_events_in_windows` | Count each event in successive `(start, end]` windows, including multiple events at the same time. |
-| `percentile` | Nearest rank by default. Select `upper-index` to preserve an existing policy that takes the element at `floor(n * p)`, capped at the last element. Both return an empty result for an empty sample. |
+| `percentile` / `percentiles` | Read one or several quantiles from a single sorted sample. Nearest rank by default. Select `upper-index` to preserve an existing policy that takes the element at `floor(n * p)`, capped at the last element. Both return an empty result for an empty sample. |
 
 The shared [conformance cases](../test/flow-calculation-cases.json) exercise both implementations. The Python module uses the standard library. The browser build imports a local ES module generated from the same JavaScript source as the package. Consumer checkouts carry a pinned snapshot and its license, so their runtime and deployment builds need neither a network fetch nor another language runtime.
 
