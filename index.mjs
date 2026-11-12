@@ -1,5 +1,5 @@
 import FlowMetrics from './flow-metrics.js';
 
 export const {
-  countEventsInWindows, countIntervals, createFlow, elapsed, histogram, individualsMovingRange, percentile, percentiles,
+  countEventsInWindows, countIntervals, createBucketCounter, createFlow, elapsed, histogram, individualsMovingRange, percentile, percentiles,
 } = FlowMetrics;

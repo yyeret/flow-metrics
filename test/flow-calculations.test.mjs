@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { test } from 'node:test';
-import { countEventsInWindows, countIntervals, elapsed, percentile, percentiles } from '@yyeret/flow-metrics';
+import { countEventsInWindows, countIntervals, createBucketCounter, elapsed, percentile, percentiles } from '@yyeret/flow-metrics';
 
 const cases = JSON.parse(readFileSync(new URL('./flow-calculation-cases.json', import.meta.url)));
 
@@ -32,4 +32,14 @@ test('batch percentiles preserve requested order and handle empty samples', () =
   assert.deepEqual(percentiles(values, probabilities), nearest);
   assert.deepEqual(percentiles(values, probabilities, { method: 'upper-index' }), upper);
   assert.deepEqual(percentiles([], probabilities), [null, null, null]);
+});
+
+test('streamed bucket intervals clip to the sample range and exclude their end', () => {
+  const counter = createBucketCounter(5);
+  counter.add(-2, 2);
+  counter.add(1, 5);
+  counter.add(4, 8);
+  counter.add(3, 3);
+  counter.add(8, 10);
+  assert.deepEqual(counter.counts(), [1, 2, 1, 1, 2]);
 });

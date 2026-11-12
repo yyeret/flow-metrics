@@ -154,21 +154,44 @@ const FlowMetrics = (() => {
     return low;
   }
 
+  function createBucketCounter(length) {
+    if (!Number.isInteger(length) || length < 0) {
+      throw new RangeError('bucket count must be a nonnegative integer');
+    }
+    const changes = new Array(length + 1).fill(0);
+    return {
+      add(start, end) {
+        const first = Math.max(start, 0);
+        const last = Math.min(end, length);
+        if (first >= last) return;
+        if (!Number.isInteger(first) || !Number.isInteger(last)) {
+          throw new RangeError('bucket endpoints must be integers');
+        }
+        changes[first]++;
+        changes[last]--;
+      },
+      counts() {
+        let count = 0;
+        return Array.from({ length }, (_, index) => {
+          count += changes[index];
+          return count;
+        });
+      },
+    };
+  }
+
   function countIntervals(intervals, samples) {
     checkOrder(samples);
-    const changes = new Array(samples.length + 1).fill(0);
+    const counter = createBucketCounter(samples.length);
     for (const [start, end] of intervals) {
       checkTime(start, 'interval start');
       if (end !== null) checkTime(end, 'interval end');
-      if (end !== null && end <= start) continue;
-      changes[insertionIndex(samples, start)]++;
-      changes[end === null ? samples.length : insertionIndex(samples, end)]--;
+      counter.add(
+        insertionIndex(samples, start),
+        end === null ? samples.length : insertionIndex(samples, end),
+      );
     }
-    let count = 0;
-    return samples.map((_, index) => {
-      count += changes[index];
-      return count;
-    });
+    return counter.counts();
   }
 
   function countEventsInWindows(events, boundaries) {
@@ -271,7 +294,7 @@ const FlowMetrics = (() => {
     return { available: true, values, baseline, center, upper, lower, mr, mrMean, mrUpper, signals };
   }
 
-  return Object.freeze({ countEventsInWindows, countIntervals, createFlow, elapsed, histogram, individualsMovingRange, percentile, percentiles });
+  return Object.freeze({ countEventsInWindows, countIntervals, createBucketCounter, createFlow, elapsed, histogram, individualsMovingRange, percentile, percentiles });
 })();
 
 if (typeof module === 'object' && module?.exports) module.exports = FlowMetrics;

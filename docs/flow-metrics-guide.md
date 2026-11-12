@@ -52,6 +52,7 @@ The browser and Python consumers share these calculation contracts. Keep stage m
 | --- | --- |
 | `elapsed` | Signed end minus start in the requested unit. Python datetime differences use seconds before scaling. |
 | `countIntervals` / `count_intervals` | Count each `[start, end)` interval at chronological sample times. An open end is `null` in JavaScript and `None` in Python. Empty or reversed intervals contribute zero. |
+| `createBucketCounter` (JavaScript) | Stream intervals with integer bucket indices into a fixed length series. `add(start, end)` clips each half-open interval to the series. `counts()` returns occupancy per bucket. |
 | `countEventsInWindows` / `count_events_in_windows` | Count each event in successive `(start, end]` windows, including multiple events at the same time. |
 | `percentile` / `percentiles` | Read one or several quantiles from a single sorted sample. Nearest rank by default. Select `upper-index` to preserve an existing policy that takes the element at `floor(n * p)`, capped at the last element. Both return an empty result for an empty sample. |
 

@@ -24,7 +24,11 @@ def main():
         parser.error(f"{checkout} does not contain {sentinel}")
 
     origin = f"Vendored from yyeret/flow-metrics at {revision}. Refresh using scripts/vendor.py upstream.\n"
-    files = {"vendor/FLOW-METRICS-LICENSE": git("show", f"{revision}:LICENSE")}
+    python = git("show", f"{revision}:flow_metrics_core.py")
+    files = {
+        "vendor/FLOW-METRICS-LICENSE": git("show", f"{revision}:LICENSE"),
+        "flow_metrics_core.py": f"# {origin}".encode("utf-8") + python,
+    }
     if args.consumer == "jira-flow-coaching":
         classic = git("show", f"{revision}:flow-metrics.js").decode("utf-8")
         node_entry = git("show", f"{revision}:index.mjs").decode("utf-8")
@@ -33,9 +37,6 @@ def main():
             raise SystemExit("The JavaScript module entry changed. Update the vendor script.")
         browser_exports = node_entry.split("\n", 1)[1]
         files["vendor/flow-metrics.mjs"] = f"// {origin}{body}{browser_exports}".encode("utf-8")
-    else:
-        python = git("show", f"{revision}:flow_metrics_core.py")
-        files["flow_metrics_core.py"] = f"# {origin}".encode("utf-8") + python
 
     for name, expected in files.items():
         path = checkout / name
