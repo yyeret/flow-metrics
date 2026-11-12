@@ -4,6 +4,8 @@ A JavaScript library for measuring how work moves through a workflow. Give it ti
 
 Yuval Yeret’s [Flow Metrics for Scrum](https://yuvalyeret.com/blog/4-key-flow-metrics-and-how-to-use-them-in-scrums-events/) explains the four measures and when to act on them. The [flow metrics guide](docs/flow-metrics-guide.md) covers definitions, implementation choices, and further reading from Yuval, Scrum.org, and ProKanban.
 
+Start with the [example dataset and input contract](examples/README.md) to see the expected JSON, five rendered charts, and a review of what they tell you.
+
 ## Use it
 
 Node.js 22 or later is supported. Install the [GitHub release package](https://github.com/yyeret/flow-metrics/releases/tag/v0.1.0) in your project.
